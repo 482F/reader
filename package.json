@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "serve": "vite preview",
     "build": "vite build",
-    "dev": "vite preview",
+    "dev": "vite",
+    "preview": "vite preview",
     "deploy": "gh-pages -d dist",
     "optimize": "vite optimize"
   },
