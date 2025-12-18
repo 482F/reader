@@ -1,7 +1,11 @@
 <template>
   <div
     class="container"
-    :style="{ '--em': `${setting.emPx}px`, '--bg-color': setting.bgColor }"
+    :style="{
+      '--em': `${setting.emPx}px`,
+      '--color': setting.color,
+      '--bg-color': setting.bgColor,
+    }"
   >
     <div
       :class="{
@@ -22,6 +26,11 @@
           フォントサイズ<span class="px">{{ setting.emPx }}px</span>
         </div>
       </div>
+
+      <label class="color">
+        <input type="color" v-model="setting.color" />
+        <div>文字色</div>
+      </label>
 
       <label class="bg-color">
         <input type="color" v-model="setting.bgColor" />
@@ -54,8 +63,9 @@ import Btn from '../../components/atoms/btn.vue'
 
 const setting = useLocalStorage<{
   emPx: number
+  color: string
   bgColor: string
-}>('settings', { emPx: 18, bgColor: '#f7f1ec' })
+}>('settings', { emPx: 18, color: '#332222', bgColor: '#f7f1ec' })
 
 const file = useLocalStorage<null | { name: string; html: string }>(
   'file',
@@ -122,7 +132,9 @@ async function onFile(rawFile: File) {
   --em: 12px;
   --header-width: 6rem;
   --bg-color: #f7f1ec;
+  --color: #332222;
   background-color: var(--bg-color);
+  color: var(--color);
 
   height: 100%;
   width: 100%;
