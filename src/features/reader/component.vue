@@ -21,15 +21,15 @@ useTemplateRef<HTMLElement>('container').then(async ({ value: container }) => {
   if (!container) {
     return
   }
-  while (container.scrollHeight < scroll.value) {
+  while (container.scrollWidth < scroll.value) {
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
-  container.scrollTo({ top: scroll.value })
+  container.scrollTo({ left: scroll.value })
 })
 
 const onScroll = ref(
   throttle(function (e) {
-    scroll.value = e.target.scrollTop
+    scroll.value = e.target.scrollLeft
   }, 1000)
 )
 
@@ -45,8 +45,16 @@ async function onInputFiles(e: Event) {
 .container {
   --bg-color: #f7f1ec;
   background-color: var(--bg-color);
+  padding: 3rem;
 
-  height: 100vh;
-  overflow-y: scroll;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  overflow-x: scroll;
+
+  word-wrap: break-word;
+
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }
 </style>
