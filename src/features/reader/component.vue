@@ -9,6 +9,7 @@
   >
     <div
       :class="{
+        vertical: true,
         header: true,
         show: isShowHeader,
       }"
@@ -38,7 +39,7 @@
       </label>
     </div>
     <div
-      class="body"
+      class="body vertical"
       ref="body"
       @scroll="
         (e) => {
@@ -139,8 +140,10 @@ async function onFile(rawFile: File) {
   height: 100%;
   width: 100%;
 
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+  .vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
   > .body {
     font-size: var(--em);
 
