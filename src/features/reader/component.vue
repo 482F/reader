@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" :style="{ '--em': `${setting.emPx}px` }">
     <div
       :class="{
         header: true,
@@ -10,6 +10,15 @@
       <file-input-button class="file-input-button" @input="onFile">
         HTMLファイルを選択
       </file-input-button>
+      <div class="font-range">
+        <dit class="buttons">
+          <btn @click="setting.emPx--">-</btn>
+          <btn @click="setting.emPx++">+</btn>
+        </dit>
+        <div>
+          フォントサイズ<span class="px">{{ setting.emPx }}px</span>
+        </div>
+      </div>
     </div>
     <div
       class="body"
@@ -33,6 +42,11 @@ import { useLocalStorage } from '../../utils/composables/local-storage-usable'
 import { useTemplateRef } from '../../utils/composables/template-ref-usable'
 
 import FileInputButton from '../../components/atoms/file-input-button.vue'
+import Btn from '../../components/atoms/btn.vue'
+
+const setting = useLocalStorage<{
+  emPx: number
+}>('settings', { emPx: 12 })
 
 const file = useLocalStorage<null | { name: string; html: string }>(
   'file',
@@ -96,6 +110,7 @@ async function onFile(rawFile: File) {
 
 <style lang="scss" scoped>
 .container {
+  --em: 12px;
   --header-width: 6rem;
   --bg-color: #f7f1ec;
   background-color: var(--bg-color);
@@ -106,7 +121,9 @@ async function onFile(rawFile: File) {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   > .body {
-    padding: 3rem;
+    font-size: var(--em);
+
+    padding: calc(3 * var(--em));
     padding-right: var(--header-width);
     box-sizing: border-box;
 
@@ -143,6 +160,22 @@ async function onFile(rawFile: File) {
     > .file-input-button {
       text-orientation: upright;
       width: calc(var(--header-width) - 2rem);
+    }
+    > .font-range {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      > div > .px {
+        writing-mode: initial;
+      }
+      > .buttons {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        > * {
+          flex-grow: 1;
+        }
+      }
     }
   }
 }
