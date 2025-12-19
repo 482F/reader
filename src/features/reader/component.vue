@@ -5,6 +5,7 @@
       '--em': `${setting.emPx}px`,
       '--color': setting.color,
       '--bg-color': setting.bgColor,
+      '--line-height': `${lineHeight}px`,
     }"
   >
     <btn class="header-button" @click="isShowHeader = !isShowHeader">
@@ -52,6 +53,10 @@
       "
       v-html="DOMPurify.sanitize(file?.html ?? '')"
     />
+    <div class="pager">
+      <btn @click="move(-1)">&lt;</btn>
+      <btn @click="move(1)">&gt;</btn>
+    </div>
   </div>
 </template>
 
@@ -70,6 +75,7 @@ const setting = useLocalStorage<{
   color: string
   bgColor: string
 }>('settings', { emPx: 18, color: '#332222', bgColor: '#f7f1ec' })
+const lineHeight = computed(() => Math.round(setting.value.emPx * 1.4))
 
 const file = useLocalStorage<null | { name: string; html: string }>(
   'file',
@@ -110,6 +116,17 @@ async function onFile(rawFile: File) {
   file.value = { name: rawFile.name, html: await rawFile.text() }
   await init()
 }
+
+async function move(delta: number) {
+  const { value: body } = await bodyRefPromise
+  if (!body) {
+    return
+  }
+
+  const movePx =
+    Math.floor(body.clientWidth / lineHeight.value) * lineHeight.value
+  body.scrollBy({ left: delta * movePx })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -118,8 +135,10 @@ async function onFile(rawFile: File) {
   --header-width: 6rem;
   --bg-color: #f7f1ec;
   --color: #332222;
+  --line-height: 24px;
   background-color: var(--bg-color);
   color: var(--color);
+  line-height: var(--line-height);
 
   height: 100%;
   width: 100%;
@@ -141,8 +160,15 @@ async function onFile(rawFile: File) {
 
     word-wrap: break-word;
 
-    :deep(p) {
-      margin: 0;
+    :deep {
+      p {
+        margin: 0;
+      }
+      ruby > rt {
+        // ルビがある p タグの幅が line-height より大きくなるため、負のマージンで詰める
+        margin-right: -1em;
+        margin-left: -0.4em;
+      }
     }
   }
 
@@ -195,6 +221,20 @@ async function onFile(rawFile: File) {
           flex-grow: 1;
         }
       }
+    }
+  }
+  .pager {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+
+    display: flex;
+    gap: 8px;
+
+    opacity: 0.3;
+    > button {
+      height: 4rem;
+      width: 4rem;
     }
   }
 }
