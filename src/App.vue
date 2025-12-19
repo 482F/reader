@@ -1,9 +1,7 @@
 <template>
-  <v-app>
-    <v-main>
-      <main-component/>
-    </v-main>
-  </v-app>
+  <div id="app">
+    <main-component />
+  </div>
 </template>
 
 <script>
@@ -24,7 +22,7 @@ export default {
 
 <style lang="scss">
 * {
-  font-family: "Cica";
+  font-family: 'Cica';
   &::-webkit-scrollbar-track {
     background-color: #eee;
   }
