@@ -51,7 +51,7 @@
           onScroll(e)
         }
       "
-      v-html="DOMPurify.sanitize(file?.html ?? '')"
+      v-html="html"
     />
     <div class="pager">
       <btn @click="move(-1)">&lt;</btn>
@@ -81,6 +81,16 @@ const file = useLocalStorage<null | { name: string; html: string }>(
   'file',
   null
 )
+const html = computed(() => {
+  const dom = new DOMParser().parseFromString(
+    DOMPurify.sanitize(file.value?.html ?? ''),
+    'text/html'
+  )
+  ;[...dom.querySelectorAll('img')].forEach((img) => {
+    img.outerHTML = img.alt
+  })
+  return dom.body.innerHTML
+})
 const scrollMap = useLocalStorage<{ [name in string]: number }>('scrollMap', {})
 const scroll = computed({
   get: () => scrollMap.value[String(file.value?.name)] ?? 0,
