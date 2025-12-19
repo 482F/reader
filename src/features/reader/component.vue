@@ -1,18 +1,27 @@
 <template>
-  <div
-    class="container"
-    @scroll="
-      (e) => {
-        // @ts-expect-error
-        onScroll(e)
-      }
-    "
-    ref="container"
-  >
-    <div class="input-file">
-      <input type="file" @change="onInputFiles" accept=".html" />
+  <div class="container">
+    <div
+      :class="{
+        header: true,
+        show: isShowHeader,
+      }"
+      ref="header"
+    >
+      <div class="input-file">
+        <input type="file" @change="onInputFiles" accept=".html" />
+      </div>
     </div>
-    <div class="reader" v-html="DOMPurify.sanitize(file?.html ?? '')" />
+    <div
+      class="body"
+      ref="body"
+      @scroll="
+        (e) => {
+          // @ts-expect-error
+          onScroll(e)
+        }
+      "
+      v-html="DOMPurify.sanitize(file?.html ?? '')"
+    />
   </div>
 </template>
 
@@ -35,24 +44,47 @@ const scroll = computed({
   },
 })
 
-const containerRefPromise = useTemplateRef<HTMLElement>('container')
+const bodyRefPromise = useTemplateRef<HTMLElement>('body')
 async function init() {
-  const { value: container } = await containerRefPromise
-  if (!container) {
+  const { value: body } = await bodyRefPromise
+  if (!body) {
     return
   }
-  while (container.scrollWidth < scroll.value) {
+  while (body.scrollWidth < scroll.value) {
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
-  container.scrollTo({ left: scroll.value })
+  body.scrollTo({ left: scroll.value })
 }
 init()
 
-const onScroll = ref(
-  throttle(function (e: { target: { scrollLeft: number } }) {
-    scroll.value = e.target.scrollLeft
-  }, 1000)
-)
+const headerRefPromise = useTemplateRef<HTMLElement>('header')
+const throttledUpdateScroll = throttle((nv) => {
+  scroll.value = nv
+}, 1000)
+let lastScrollLeft = Infinity
+let lastRightStarted = Infinity
+const isShowHeader = ref(true)
+async function onScroll(e: { target: { scrollLeft: number } }) {
+  const { scrollLeft } = e.target
+  throttledUpdateScroll(scrollLeft)
+
+  const { value: header } = await headerRefPromise
+  if (!header) {
+    return
+  }
+
+  const threshold = 30
+
+  isShowHeader.value = threshold < scrollLeft - lastRightStarted
+
+  const toLeftDelta = lastScrollLeft - scrollLeft
+  if (0 <= toLeftDelta) {
+    lastRightStarted = scrollLeft
+  } else if (threshold <= -toLeftDelta) {
+    lastRightStarted = scrollLeft - threshold
+  }
+  lastScrollLeft = scrollLeft
+}
 
 async function onInputFiles(e: Event) {
   // @ts-expect-error
@@ -67,21 +99,50 @@ async function onInputFiles(e: Event) {
 
 <style lang="scss" scoped>
 .container {
+  --header-width: 6rem;
   --bg-color: #f7f1ec;
   background-color: var(--bg-color);
-  padding: 3rem;
 
-  box-sizing: border-box;
   height: 100%;
   width: 100%;
-  overflow-x: scroll;
-
-  word-wrap: break-word;
 
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  :deep(p) {
-    margin: 0;
+  > .body {
+    padding: 3rem;
+    padding-right: var(--header-width);
+    box-sizing: border-box;
+
+    height: 100%;
+    width: 100%;
+    overflow-x: scroll;
+
+    word-wrap: break-word;
+
+    :deep(p) {
+      margin: 0;
+    }
+  }
+
+  > .header {
+    border-left: solid 1px lightgray;
+    background-color: #fdfdfd;
+
+    width: var(--header-width);
+    box-sizing: border-box;
+    padding: 0.5rem;
+    height: 100%;
+
+    transition: right 0.3s ease-in-out;
+    position: fixed;
+    right: calc(-1 * var(--header-width));
+    &.show {
+      right: 0;
+    }
+
+    display: flex;
+    gap: 32px;
+    align-items: center;
   }
 }
 </style>
