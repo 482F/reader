@@ -7,9 +7,9 @@
       }"
       ref="header"
     >
-      <div class="input-file">
-        <input type="file" @change="onInputFiles" accept=".html" />
-      </div>
+      <file-input-button class="file-input-button" @input="onFile">
+        HTMLファイルを選択
+      </file-input-button>
     </div>
     <div
       class="body"
@@ -31,6 +31,8 @@ import DOMPurify from 'dompurify'
 import { ref, computed } from 'vue'
 import { useLocalStorage } from '../../utils/composables/local-storage-usable'
 import { useTemplateRef } from '../../utils/composables/template-ref-usable'
+
+import FileInputButton from '../../components/atoms/file-input-button.vue'
 
 const file = useLocalStorage<null | { name: string; html: string }>(
   'file',
@@ -86,12 +88,7 @@ async function onScroll(e: { target: { scrollLeft: number } }) {
   lastScrollLeft = scrollLeft
 }
 
-async function onInputFiles(e: Event) {
-  // @ts-expect-error
-  const [rawFile]: File[] = e.currentTarget?.files ?? []
-  if (!rawFile) {
-    return
-  }
+async function onFile(rawFile: File) {
   file.value = { name: rawFile.name, html: await rawFile.text() }
   await init()
 }
@@ -143,6 +140,10 @@ async function onInputFiles(e: Event) {
     display: flex;
     gap: 32px;
     align-items: center;
+    > .file-input-button {
+      text-orientation: upright;
+      width: calc(var(--header-width) - 2rem);
+    }
   }
 }
 </style>
