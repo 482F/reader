@@ -1,23 +1,11 @@
 <template>
   <div id="app">
-    <main-component />
+    <reader />
   </div>
 </template>
 
-<script>
-import MainComponent from './components/main-component.vue'
-
-export default {
-  name: 'App',
-
-  components: {
-    MainComponent,
-  },
-
-  data: () => ({
-    //
-  }),
-}
+<script setup lang="ts">
+import Reader from './features/reader/component.vue'
 </script>
 
 <style lang="scss">
