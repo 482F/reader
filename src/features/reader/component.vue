@@ -7,6 +7,9 @@
       '--bg-color': setting.bgColor,
     }"
   >
+    <btn class="header-button" @click="isShowHeader = !isShowHeader">
+      {{ isShowHeader ? '>' : '<' }}
+    </btn>
     <div
       :class="{
         vertical: true,
@@ -93,34 +96,15 @@ async function init() {
 }
 init()
 
-const headerRefPromise = useTemplateRef<HTMLElement>('header')
 const throttledUpdateScroll = throttle((nv) => {
   scroll.value = nv
 }, 1000)
-let lastScrollLeft = Infinity
-let lastRightStarted = Infinity
-const isShowHeader = ref(true)
 async function onScroll(e: { target: { scrollLeft: number } }) {
   const { scrollLeft } = e.target
   throttledUpdateScroll(scrollLeft)
-
-  const { value: header } = await headerRefPromise
-  if (!header) {
-    return
-  }
-
-  const threshold = 30
-
-  isShowHeader.value = threshold < scrollLeft - lastRightStarted
-
-  const toLeftDelta = lastScrollLeft - scrollLeft
-  if (0 <= toLeftDelta) {
-    lastRightStarted = scrollLeft
-  } else if (threshold <= -toLeftDelta) {
-    lastRightStarted = scrollLeft - threshold
-  }
-  lastScrollLeft = scrollLeft
 }
+
+const isShowHeader = ref(false)
 
 async function onFile(rawFile: File) {
   file.value = { name: rawFile.name, html: await rawFile.text() }
@@ -162,6 +146,17 @@ async function onFile(rawFile: File) {
     }
   }
 
+  > .header-button {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+
+    opacity: 0.3;
+
+    height: 4rem;
+    width: 4rem;
+    z-index: 1;
+  }
   > .header {
     border-left: solid 1px lightgray;
     background-color: #fdfdfd;
