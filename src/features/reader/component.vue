@@ -1,23 +1,43 @@
 <template>
-  <div class="container" @scroll="onScroll" ref="container">
+  <div
+    class="container"
+    @scroll="
+      (e) => {
+        // @ts-expect-error
+        onScroll(e)
+      }
+    "
+    ref="container"
+  >
     <div class="input-file">
-      <input type="file" @change="onInputFiles" accept="plain/text" />
+      <input type="file" @change="onInputFiles" accept=".html" />
     </div>
-    <div class="reader" v-html="DOMPurify.sanitize(html)" />
+    <div class="reader" v-html="DOMPurify.sanitize(file?.html ?? '')" />
   </div>
 </template>
 
 <script setup lang="ts">
 import throttle from 'lodash/throttle'
 import DOMPurify from 'dompurify'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useLocalStorage } from '../../utils/composables/local-storage-usable'
 import { useTemplateRef } from '../../utils/composables/template-ref-usable'
 
-const html = useLocalStorage<string>('html')
-const scroll = useLocalStorage<number>('scroll')
+const file = useLocalStorage<null | { name: string; html: string }>(
+  'file',
+  null
+)
+const scrollMap = useLocalStorage<{ [name in string]: number }>('scrollMap', {})
+const scroll = computed({
+  get: () => scrollMap.value[String(file.value?.name)] ?? 0,
+  set: (nv) => {
+    scrollMap.value[String(file.value?.name)] = nv
+  },
+})
 
-useTemplateRef<HTMLElement>('container').then(async ({ value: container }) => {
+const containerRefPromise = useTemplateRef<HTMLElement>('container')
+async function init() {
+  const { value: container } = await containerRefPromise
   if (!container) {
     return
   }
@@ -25,19 +45,23 @@ useTemplateRef<HTMLElement>('container').then(async ({ value: container }) => {
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
   container.scrollTo({ left: scroll.value })
-})
+}
+init()
 
 const onScroll = ref(
-  throttle(function (e) {
+  throttle(function (e: { target: { scrollLeft: number } }) {
     scroll.value = e.target.scrollLeft
   }, 1000)
 )
 
 async function onInputFiles(e: Event) {
-  const files = e.currentTarget?.files
-  if (!files || files.length <= 0) return
-  const file = files[0]
-  html.value = await file.text()
+  // @ts-expect-error
+  const [rawFile]: File[] = e.currentTarget?.files ?? []
+  if (!rawFile) {
+    return
+  }
+  file.value = { name: rawFile.name, html: await rawFile.text() }
+  await init()
 }
 </script>
 
