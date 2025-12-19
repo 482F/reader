@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import throttle from 'lodash/throttle'
 import { ref, watch } from 'vue'
 
