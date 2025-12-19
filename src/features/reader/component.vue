@@ -56,5 +56,8 @@ async function onInputFiles(e: Event) {
 
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  :deep(p) {
+    margin: 0;
+  }
 }
 </style>
