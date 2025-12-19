@@ -3,14 +3,13 @@
     <div class="input-file">
       <input type="file" @change="onInputFiles" accept="plain/text" />
     </div>
-    <div class="reader">
-      {{ storage.text }}
-    </div>
+    <div class="reader" v-html="DOMPurify.sanitize(storage.text)" />
   </div>
 </template>
 
 <script setup lang="ts">
 import throttle from 'lodash/throttle'
+import DOMPurify from 'dompurify'
 import { ref, watch } from 'vue'
 
 const mainComponentRef = ref(null)
