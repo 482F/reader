@@ -9,6 +9,9 @@ import Reader from './features/reader/component.vue'
 </script>
 
 <style lang="scss">
+body {
+  margin: 0;
+}
 * {
   font-family: 'Cica';
   &::-webkit-scrollbar-track {

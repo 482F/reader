@@ -1,61 +1,48 @@
 <template>
-  <div class="main-component" @scroll="onScroll" ref="mainComponentRef">
+  <div class="container" @scroll="onScroll" ref="container">
     <div class="input-file">
       <input type="file" @change="onInputFiles" accept="plain/text" />
     </div>
-    <div class="reader" v-html="DOMPurify.sanitize(storage.text)" />
+    <div class="reader" v-html="DOMPurify.sanitize(html)" />
   </div>
 </template>
 
 <script setup lang="ts">
 import throttle from 'lodash/throttle'
 import DOMPurify from 'dompurify'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import { useLocalStorage } from '../../utils/composables/local-storage-usable'
+import { useTemplateRef } from '../../utils/composables/template-ref-usable'
 
-const mainComponentRef = ref(null)
+const html = useLocalStorage<string>('html')
+const scroll = useLocalStorage<number>('scroll')
 
-const storageKey = (key) => 'github-pages--482F--reader--' + key
-const storage = ref({
-  text: localStorage.getItem(storageKey('text')) ?? '',
-  scroll: Number(localStorage.getItem(storageKey('scroll')) ?? 0),
+useTemplateRef<HTMLElement>('container').then(async ({ value: container }) => {
+  if (!container) {
+    return
+  }
+  while (container.scrollHeight < scroll.value) {
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+  container.scrollTo({ top: scroll.value })
 })
-
-watch(mainComponentRef, async () => {
-  while (mainComponentRef.value?.scrollTop < storage.scroll) {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
-  mainComponentRef.value.scrollTo({ top: storage.value.scroll })
-})
-
-watch(
-  () => storage.value.text,
-  () => {
-    localStorage.setItem(storageKey('text'), storage.value.text)
-  }
-)
-watch(
-  () => storage.value.scroll,
-  () => {
-    localStorage.setItem(storageKey('scroll'), storage.value.scroll)
-  }
-)
-
-async function onInputFiles(e) {
-  const files = e.currentTarget.files
-  if (!files || files.length <= 0) return
-  const file = files[0]
-  storage.value.text = await file.text()
-}
 
 const onScroll = ref(
   throttle(function (e) {
-    storage.value.scroll = e.target.scrollTop
-  }, 1000 * 5)
+    scroll.value = e.target.scrollTop
+  }, 1000)
 )
+
+async function onInputFiles(e: Event) {
+  const files = e.currentTarget?.files
+  if (!files || files.length <= 0) return
+  const file = files[0]
+  html.value = await file.text()
+}
 </script>
 
 <style lang="scss" scoped>
-.main-component {
+.container {
   --bg-color: #f7f1ec;
   background-color: var(--bg-color);
 
